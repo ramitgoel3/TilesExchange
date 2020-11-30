@@ -1,0 +1,117 @@
+#include<stdlib.h>
+#include<GL/glut.h>
+#include<stdio.h>
+#define maxx 11
+#define maxy 11
+#define dx 50
+#define dy 50
+typedef struct cell
+		{
+	GLfloat x0,y0,x1,y1;
+	int color;
+		}cellt;
+cellt board[20][20];
+GLfloat color[3][3]={{0,0,1},{0,1,0},{1,0,0}};
+GLfloat x0=0,y0=0;
+GLint i,j,stroke=0,pastx,pasty,nextx,nexty,swapthetwo=0;
+void init()
+{int i=0,j=0;
+	glClearColor(1.0,1.0,1.0,1.0);
+	glColor3f(1.0,0.0,0.0);
+	glPointSize(5.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0,499.0,0.0,499.0);
+	glutPostRedisplay();
+	for(i=0;i<maxx;i++)
+		for(j=0;j<maxy;j++)
+		{
+			board[i][j].x0=x0+i*dx+1;
+			board[i][j].x1=x0+(i+1)*dx-1;
+			board[i][j].y0=y0+j*dy+1;
+			board[i][j].y1=y0+(j+1)*dy-1;
+			board[i][j].color=rand()%3;
+		}
+};
+void display(void)
+{
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+
+	for(i=0;i<maxx-1;i++)
+	{
+		for(j=0;j<maxy-1;j++)
+		{
+
+        	 glColor3fv(color[board[i][j].color]);
+
+         glBegin(GL_POLYGON);
+         			     glVertex2f(board[i][j].x0,board[i][j].y0);
+         			     glVertex2f(board[i][j].x0,board[i][j].y1);
+         			     glVertex2f(board[i][j].x1,board[i][j].y1);
+         			     glVertex2f(board[i][j].x1,board[i][j].y0);
+         			     glEnd();
+         			     glColor3f(0.0,0.0,0.0);
+         			    glBegin(GL_LINE_LOOP);
+         			   glVertex2f(board[i][j].x0,board[i][j].y0);
+         			   glVertex2f(board[i][j].x0,board[i][j].y1);
+         			   glVertex2f(board[i][j].x1,board[i][j].y1);
+         			   glVertex2f(board[i][j].x1,board[i][j].y0);
+         			    			     glEnd();
+
+
+	    }
+	}
+	glFlush();
+	glutSwapBuffers();
+}
+void mouse(int btn,int status,int x,int y)
+{y=500-y;
+	if(stroke==0&&btn==GLUT_LEFT_BUTTON&&status==GLUT_DOWN)
+{
+	stroke=1;
+	pastx=x;
+	pasty=y;
+	printf("pastx=%d,%d\n",pastx/dx,pasty/dy);
+}
+	if(stroke==1&&btn==GLUT_LEFT_BUTTON&&status==GLUT_UP)
+	{
+stroke=0;
+nextx=x;
+nexty=y;
+printf("nextx=%d,%d\n",nextx/dx,nexty/dy);
+if(abs(pastx/dx-nextx/dx)==1&&pasty/dy==nexty/dy)
+swapthetwo=1;
+if(abs(pasty/dy-nexty/dy)==1&&pastx/dx==nextx/dx)
+swapthetwo=1;
+	}
+}
+
+void idle(void)
+{int temp;
+if(swapthetwo)
+{swapthetwo=0;
+	temp=board[pastx/dx][pasty/dy].color;
+	board[pastx/dx][pasty/dy].color=board[nextx/dx][nexty/dy].color;
+	board[nextx/dx][nexty/dy].color=temp;
+printf("swapped");
+}
+
+glutPostRedisplay();
+}
+int main(int argc,char **argv)
+{
+	glutInit(&argc,argv);
+	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
+	glutInitWindowSize(500,500);
+	glutInitWindowPosition(0,0);
+	glutCreateWindow("mesh");
+	glutDisplayFunc(display);
+//	glutMotionFunc(motion);
+	glutIdleFunc(idle);
+	glutMouseFunc(mouse);
+	init();
+	glutMainLoop();
+	return(0);
+}
